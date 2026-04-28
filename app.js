@@ -232,36 +232,38 @@ function parseSunTime(localtime, hm) {
 //
 // TEMPERATURE TREND CHART
 //
+updateTempChart(data.next12Hours);
+
 function updateTempChart(hours) {
     const canvas = document.getElementById("tempChart");
     const ctx = canvas.getContext("2d");
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-
     const temps = hours.map(h => h.temp);
-    drawLineChart(ctx, canvas, temps, "#FFEB3B");
+
+    drawLineChart(ctx, canvas, temps, "#FFEB3B", "°C");
 }
 
 //
 // RAIN CHANCE TREND CHART
 //
+updateRainChart(data.next12Hours);
+
 function updateRainChart(hours) {
     const canvas = document.getElementById("rainChart");
     const ctx = canvas.getContext("2d");
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-
     const rain = hours.map(h => h.rain_chance);
-    drawLineChart(ctx, canvas, rain, "#80DEEA");
+
+    drawLineChart(ctx, canvas, rain, "#80DEEA", "%");
 }
 
 //
 // GENERIC LINE CHART
 //
-function drawLineChart(ctx, canvas, values, color) {
+function drawLineChart(ctx, canvas, values, color, yLabel) {
     if (!values.length) return;
 
     const w = canvas.width;
     const h = canvas.height;
-    const pad = 20;
+    const pad = 30;
 
     const min = Math.min(...values);
     const max = Math.max(...values);
@@ -269,13 +271,42 @@ function drawLineChart(ctx, canvas, values, color) {
 
     const step = (w - pad * 2) / (values.length - 1);
 
-    // Axis
+    ctx.clearRect(0, 0, w, h);
+
+    // Y-axis label
+    ctx.fillStyle = "white";
+    ctx.font = "12px Arial";
+    ctx.fillText(yLabel, 5, 15);
+
+    // X-axis label
+    ctx.fillText("Hours →", w - 70, h - 5);
+
+    // Axis line
     ctx.strokeStyle = "rgba(255,255,255,0.3)";
     ctx.lineWidth = 1;
     ctx.beginPath();
     ctx.moveTo(pad, h - pad);
     ctx.lineTo(w - pad, h - pad);
     ctx.stroke();
+
+    // Y-axis ticks
+    ctx.fillStyle = "rgba(255,255,255,0.8)";
+    ctx.font = "11px Arial";
+
+    const ticks = 4;
+    for (let i = 0; i <= ticks; i++) {
+        const t = i / ticks;
+        const value = min + t * range;
+        const y = h - pad - t * (h - pad * 2);
+
+        ctx.fillText(value.toFixed(1), 5, y + 3);
+
+        ctx.strokeStyle = "rgba(255,255,255,0.15)";
+        ctx.beginPath();
+        ctx.moveTo(pad, y);
+        ctx.lineTo(w - pad, y);
+        ctx.stroke();
+    }
 
     // Line
     ctx.strokeStyle = color;
@@ -291,6 +322,17 @@ function drawLineChart(ctx, canvas, values, color) {
     });
 
     ctx.stroke();
+
+    // X-axis hour labels
+    ctx.fillStyle = "rgba(255,255,255,0.8)";
+    ctx.font = "11px Arial";
+
+    values.forEach((_, i) => {
+        if (i % 3 === 0 || i === values.length - 1) {
+            const x = pad + i * step;
+            ctx.fillText(i.toString(), x - 3, h - pad + 15);
+        }
+    });
 }
 
 //
