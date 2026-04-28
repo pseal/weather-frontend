@@ -1,4 +1,4 @@
-const API_URL = "http://weather-backend-production-0667.up.railway.app/api/weather?q=";
+const API_URL = "https://weather-backend-production-0667.up.railway.app/api/weather?q=";
 
 const placeInput = document.getElementById("placeInput");
 const searchBtn = document.getElementById("searchBtn");
