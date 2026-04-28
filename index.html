@@ -1,148 +1,165 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <title>Global Weather App</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <style>
-  body {
-    font-family: 'Segoe UI', Arial, sans-serif;
-    max-width: 900px;
-    margin: 0 auto;
-    padding: 20px;
-    background: linear-gradient(to bottom right, #e3f2fd, #bbdefb);
-  }
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Weather App</title>
 
-  h1 {
-    text-align: center;
-    color: black;
-    margin-bottom: 30px;
-  }
+<style>
+    body {
+        margin: 0;
+        font-family: Arial, Helvetica, sans-serif;
+        background: linear-gradient(to bottom, #4facfe, #00f2fe);
+        color: #fff;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        padding: 0 10px;
+    }
 
-  .search {
-    display: flex;
-    gap: 10px;
-    margin-bottom: 20px;
-  }
+    h1 {
+        margin-top: 20px;
+        font-size: 32px;
+        font-weight: 700;
+    }
 
-  input {
-    flex: 1;
-    padding: 12px;
-    font-size: 16px;
-    border-radius: 8px;
-    border: 1px solid #90caf9;
-  }
+    /* Search Bar */
+    .search-container {
+        margin: 20px 0;
+        display: flex;
+        gap: 10px;
+        width: 100%;
+        max-width: 500px;
+    }
 
-  button {
-    padding: 12px 20px;
-    font-size: 16px;
-    background: #0d47a1;
-    color: white;
-    border: none;
-    border-radius: 8px;
-    cursor: pointer;
-  }
+    .search-container input {
+        flex: 1;
+        padding: 12px;
+        border-radius: 8px;
+        border: none;
+        font-size: 16px;
+    }
 
-  button:hover {
-    background: #1565c0;
-  }
+    .search-container button {
+        padding: 12px 20px;
+        border: none;
+        border-radius: 8px;
+        background: #003cff;
+        color: white;
+        font-size: 16px;
+        cursor: pointer;
+    }
 
-  .section-title {
-    margin-top: 30px;
-    font-weight: bold;
-    font-size: 20px;
-    color: black;
-  }
+    /* HERO SECTION */
+    .hero {
+        width: 100%;
+        max-width: 600px;
+        background: rgba(255,255,255,0.15);
+        padding: 20px;
+        border-radius: 16px;
+        text-align: center;
+        backdrop-filter: blur(10px);
+        margin-bottom: 20px;
+    }
 
-  .cards {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
-    gap: 15px;
-    margin-top: 10px;
-  }
+    .hero h2 {
+        margin: 0;
+        font-size: 28px;
+    }
 
-  .card {
-    background: white;
-    border-radius: 12px;
-    padding: 15px;
-    box-shadow: 0 4px 10px rgba(0,0,0,0.1);
-    text-align: center;
-    transition: transform 0.2s;
-  }
+    .hero .temp {
+        font-size: 60px;
+        font-weight: bold;
+        margin: 10px 0;
+    }
 
-  .card:hover {
-    transform: translateY(-5px);
-  }
+    .hero .condition {
+        font-size: 20px;
+        opacity: 0.9;
+    }
 
-  img {
-    margin: 10px 0;
-  }
+    /* HOURLY SCROLL */
+    .hourly-container {
+        width: 100%;
+        max-width: 900px;
+        overflow-x: auto;
+        display: flex;
+        gap: 12px;
+        padding-bottom: 10px;
+        margin-bottom: 20px;
+    }
 
-  body.dark {
-  background: linear-gradient(to bottom right, #1e1e1e, #121212);
-  color: #e0e0e0;
-}
+    .hour-card {
+        min-width: 120px;
+        background: rgba(255,255,255,0.2);
+        padding: 12px;
+        border-radius: 12px;
+        text-align: center;
+        backdrop-filter: blur(8px);
+    }
 
-.dark .card {
-  background: #1f1f1f;
-  color: #e0e0e0;
-  box-shadow: 0 4px 10px rgba(255,255,255,0.05);
-}
+    .hour-card img {
+        width: 50px;
+    }
 
-.dark input {
-  background: #2c2c2c;
-  color: white;
-  border: 1px solid #555;
-}
+    /* WEEKLY GRID */
+    .weekly-grid {
+        width: 100%;
+        max-width: 900px;
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+        gap: 12px;
+        margin-bottom: 40px;
+    }
 
-.dark button {
-  background: #333;
-  color: white;
-}
+    .day-card {
+        background: rgba(255,255,255,0.2);
+        padding: 15px;
+        border-radius: 12px;
+        text-align: center;
+        backdrop-filter: blur(8px);
+    }
 
-.dark-toggle {
-  float: right;
-  margin-bottom: 20px;
-  padding: 8px 14px;
-  border-radius: 8px;
-  background: #0d47a1;
-  color: white;
-  border: none;
-  cursor: pointer;
-}
+    .day-card img {
+        width: 50px;
+    }
+
+    /* FOOTER */
+    footer {
+        margin: 20px 0;
+        opacity: 0.8;
+        font-size: 14px;
+    }
 </style>
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
+
 <body>
-  <h1>Weather Anywhere Anytime</h1>
 
-  <div class="search">
-    <input id="placeInput" type="text" placeholder="Type a place name, e.g. Helsinki" />
-    <button id="searchBtn">Get Weather</button>
-  </div>
+<h1>Weather App</h1>
 
-  <button id="darkModeToggle" class="dark-toggle">🌙 Dark Mode</button>
+<!-- SEARCH -->
+<div class="search-container">
+    <input type="text" id="cityInput" placeholder="Enter city name..." />
+    <button onclick="getWeather()">Search</button>
+</div>
 
-  <div id="status"></div>
+<!-- HERO SECTION -->
+<div class="hero" id="heroSection">
+    <h2 id="locationName">City</h2>
+    <div class="temp" id="currentTemp">--°C</div>
+    <div class="condition" id="currentCondition">Condition</div>
+</div>
 
-  <div id="astroInfo" style="margin-top:10px; font-size:16px;"></div>
+<!-- HOURLY FORECAST -->
+<h2>Next 12 Hours</h2>
+<div class="hourly-container" id="hourlyForecast"></div>
 
-  <div>
-    <div class="section-title">Next 12 hours</div>
-    <div id="next12" class="cards"></div>
-  </div>
+<!-- WEEKLY FORECAST -->
+<h2>Next 7 Days</h2>
+<div class="weekly-grid" id="weeklyForecast"></div>
 
-  <div class="section-title">Temperature Graph (Next 12 Hours)</div>
-  <canvas id="tempChart" height="120"></canvas>
+<footer>Powered by WeatherAPI • Built by Prasenjit</footer>
 
-  <div class="section-title">Rain Probability (Next 12 Hours)</div>
-  <canvas id="rainChart" height="120"></canvas>
-
-  <div>
-    <div class="section-title">Next 7 days</div>
-    <div id="next7" class="cards"></div>
-  </div>
-
-  <script src="app.js"></script>
+<script src="app.js"></script>
 </body>
 </html>
