@@ -14,13 +14,14 @@
         display: flex;
         flex-direction: column;
         align-items: center;
-        padding: 0 10px;
+        padding: 0 10px 40px;
     }
 
     h1 {
         margin-top: 20px;
         font-size: 32px;
         font-weight: 700;
+        text-shadow: 0 2px 6px rgba(0,0,0,0.3);
     }
 
     /* Search Bar */
@@ -48,6 +49,12 @@
         color: white;
         font-size: 16px;
         cursor: pointer;
+        transition: background 0.3s ease, transform 0.2s ease;
+    }
+
+    .search-container button:hover {
+        background: #0029b5;
+        transform: translateY(-1px);
     }
 
     /* HERO SECTION */
@@ -60,6 +67,15 @@
         text-align: center;
         backdrop-filter: blur(10px);
         margin-bottom: 20px;
+        box-shadow: 0 10px 25px rgba(0,0,0,0.25);
+        opacity: 0;
+        transform: translateY(10px);
+        transition: opacity 0.5s ease, transform 0.5s ease;
+    }
+
+    .hero.visible {
+        opacity: 1;
+        transform: translateY(0);
     }
 
     .hero h2 {
@@ -76,9 +92,155 @@
     .hero .condition {
         font-size: 20px;
         opacity: 0.9;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 6px;
     }
 
-    /* HOURLY SCROLL */
+    .hero-sub {
+        margin-top: 10px;
+        font-size: 14px;
+        opacity: 0.9;
+    }
+
+    /* Animated Weather Icon */
+    .animated-icon {
+        width: 70px;
+        height: 70px;
+        animation: floatIcon 3s ease-in-out infinite;
+    }
+
+    @keyframes floatIcon {
+        0% { transform: translateY(0px); }
+        50% { transform: translateY(-6px); }
+        100% { transform: translateY(0px); }
+    }
+
+    /* TODAY SUMMARY PANEL */
+    .summary-card {
+        width: 100%;
+        max-width: 900px;
+        background: rgba(255,255,255,0.18);
+        padding: 16px;
+        border-radius: 16px;
+        backdrop-filter: blur(10px);
+        box-shadow: 0 8px 20px rgba(0,0,0,0.25);
+        margin-bottom: 20px;
+    }
+    .summary-card h3 {
+        margin-top: 0;
+        font-size: 20px;
+    }
+    .summary-row {
+        display: flex;
+        justify-content: space-between;
+        margin: 6px 0;
+        font-size: 14px;
+    }
+
+    /* Wind Compass */
+    .compass-container {
+        width: 120px;
+        height: 120px;
+        margin: 10px auto;
+        position: relative;
+    }
+
+    .compass-base {
+        width: 100%;
+        height: 100%;
+        border: 4px solid rgba(255,255,255,0.4);
+        border-radius: 50%;
+        position: relative;
+    }
+
+    .compass-base::before {
+        content: "N";
+        position: absolute;
+        top: -18px;
+        left: 50%;
+        transform: translateX(-50%);
+        font-size: 12px;
+        opacity: 0.8;
+    }
+
+    .compass-needle {
+        width: 4px;
+        height: 50%;
+        background: #ffeb3b;
+        position: absolute;
+        top: 10%;
+        left: 50%;
+        transform-origin: bottom center;
+        transform: translateX(-50%) rotate(0deg);
+        transition: transform 0.8s ease;
+    }
+
+    /* UV Index Bar */
+    .uv-bar {
+        width: 100%;
+        height: 12px;
+        border-radius: 6px;
+        background: linear-gradient(to right,
+            #4caf50 0%,
+            #ffeb3b 40%,
+            #ff9800 70%,
+            #f44336 100%
+        );
+        position: relative;
+        margin-top: 6px;
+    }
+
+    .uv-pointer {
+        width: 10px;
+        height: 20px;
+        background: white;
+        border-radius: 3px;
+        position: absolute;
+        top: -4px;
+        transform: translateX(-50%);
+        transition: left 0.5s ease;
+    }
+
+    /* SUNRISE / SUNSET + CHARTS */
+    .info-row {
+        width: 100%;
+        max-width: 900px;
+        display: flex;
+        flex-wrap: wrap;
+        gap: 16px;
+        margin-bottom: 20px;
+    }
+
+    .info-card {
+        flex: 1 1 260px;
+        background: rgba(255,255,255,0.18);
+        border-radius: 16px;
+        padding: 16px;
+        backdrop-filter: blur(10px);
+        box-shadow: 0 8px 20px rgba(0,0,0,0.25);
+    }
+
+    .info-card h3 {
+        margin-top: 0;
+        font-size: 18px;
+        margin-bottom: 8px;
+    }
+
+    canvas {
+        width: 100%;
+        max-width: 100%;
+        border-radius: 12px;
+        background: rgba(0,0,0,0.1);
+    }
+
+    /* HOURLY & WEEKLY */
+    h2.section-title {
+        margin: 10px 0;
+        text-shadow: 0 1px 4px rgba(0,0,0,0.3);
+    }
+
     .hourly-container {
         width: 100%;
         max-width: 900px;
@@ -96,20 +258,26 @@
         border-radius: 12px;
         text-align: center;
         backdrop-filter: blur(8px);
+        box-shadow: 0 6px 16px rgba(0,0,0,0.25);
+        transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+
+    .hour-card:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 10px 24px rgba(0,0,0,0.3);
     }
 
     .hour-card img {
         width: 50px;
     }
 
-    /* WEEKLY GRID */
     .weekly-grid {
         width: 100%;
         max-width: 900px;
         display: grid;
         grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
         gap: 12px;
-        margin-bottom: 40px;
+        margin-bottom: 20px;
     }
 
     .day-card {
@@ -118,6 +286,13 @@
         border-radius: 12px;
         text-align: center;
         backdrop-filter: blur(8px);
+        box-shadow: 0 6px 16px rgba(0,0,0,0.25);
+        transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+
+    .day-card:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 10px 24px rgba(0,0,0,0.3);
     }
 
     .day-card img {
@@ -126,9 +301,16 @@
 
     /* FOOTER */
     footer {
-        margin: 20px 0;
+        margin: 10px 0;
         opacity: 0.8;
         font-size: 14px;
+        text-align: center;
+    }
+
+    .hint {
+        font-size: 12px;
+        opacity: 0.8;
+        margin-top: 4px;
     }
 </style>
 </head>
@@ -148,17 +330,62 @@
     <h2 id="locationName">City</h2>
     <div class="temp" id="currentTemp">--°C</div>
     <div class="condition" id="currentCondition">Condition</div>
+    <div class="hero-sub" id="heroExtra">Feels like --°C • Humidity --%</div>
+</div>
+
+<!-- TODAY SUMMARY PANEL -->
+<div class="summary-card" id="todaySummary">
+    <h3>Today Summary</h3>
+
+    <div class="summary-row"><span>Feels Like:</span> <span id="sumFeels">--°C</span></div>
+    <div class="summary-row"><span>Humidity:</span> <span id="sumHumidity">--%</span></div>
+    <div class="summary-row"><span>Wind:</span> <span id="sumWind">-- kph</span></div>
+    <div class="summary-row"><span>Rain Chance:</span> <span id="sumRain">--%</span></div>
+    <div class="summary-row"><span>Sunrise:</span> <span id="sumSunrise">--:--</span></div>
+    <div class="summary-row"><span>Sunset:</span> <span id="sumSunset">--:--</span></div>
+
+    <h3 style="margin-top:15px;">Wind Direction</h3>
+    <div class="compass-container">
+        <div class="compass-base"></div>
+        <div class="compass-needle" id="windNeedle"></div>
+    </div>
+
+    <h3 style="margin-top:15px;">UV Index</h3>
+    <div class="uv-bar">
+        <div class="uv-pointer" id="uvPointer"></div>
+    </div>
+    <div class="hint" id="uvText">UV: --</div>
+</div>
+
+<!-- SUNRISE / SUNSET + CHARTS -->
+<div class="info-row">
+    <div class="info-card">
+        <h3>Sunrise & Sunset</h3>
+        <canvas id="sunArcCanvas" width="320" height="140"></canvas>
+        <div class="hint" id="sunTimesText">Sunrise --:-- • Sunset --:--</div>
+    </div>
+    <div class="info-card">
+        <h3>Temperature Trend (Next 12h)</h3>
+        <canvas id="tempChart" width="320" height="140"></canvas>
+    </div>
+    <div class="info-card">
+        <h3>Rain Chance Trend (Next 12h)</h3>
+        <canvas id="rainChart" width="320" height="140"></canvas>
+    </div>
 </div>
 
 <!-- HOURLY FORECAST -->
-<h2>Next 12 Hours</h2>
+<h2 class="section-title">Next 12 Hours</h2>
 <div class="hourly-container" id="hourlyForecast"></div>
 
 <!-- WEEKLY FORECAST -->
-<h2>Next 7 Days</h2>
+<h2 class="section-title">Next 7 Days</h2>
 <div class="weekly-grid" id="weeklyForecast"></div>
 
-<footer>Powered by WeatherAPI • Built by Prasenjit</footer>
+<footer>
+    Powered by WeatherAPI • Built by Prasenjit<br/>
+    <span class="hint">If location access is allowed, we auto-detect your weather.</span>
+</footer>
 
 <script src="app.js"></script>
 </body>
