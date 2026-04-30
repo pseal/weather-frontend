@@ -31,8 +31,8 @@ async function fetchAndRender(url) {
         if (hours.length < 3) return;
 
         const current = hours[0];
-        const next2 = hours.slice(1, 3);   // next 2 hours
-        const next10 = hours.slice(2, 12); // remaining 10 hours
+        const next2 = hours.slice(1, 3);
+        const next10 = hours.slice(2, 12);
 
         updateHero(data, current);
         updateNext2(next2);
@@ -152,15 +152,32 @@ function estimateUV(localtime, rainChance, condition) {
 }
 
 //
+// HIGH-RES CANVAS FIX (Retina sharp)
+//
+function fixCanvasResolution(canvas) {
+    const dpr = window.devicePixelRatio || 1;
+    const rect = canvas.getBoundingClientRect();
+
+    canvas.width = rect.width * dpr;
+    canvas.height = rect.height * dpr;
+
+    const ctx = canvas.getContext("2d");
+    ctx.scale(dpr, dpr);
+
+    return ctx;
+}
+
+//
 // TEMPERATURE CHART (NEXT 12 HOURS)
 //
 function updateTempChart(hours) {
     const canvas = document.getElementById("tempChart");
-    const ctx = canvas.getContext("2d");
+    const ctx = fixCanvasResolution(canvas);
+
     const temps = hours.map(h => h.temp);
     const labels = hours.map(h => h.time);
 
-    drawLineChart(ctx, canvas, temps, labels, "black", "°C");
+    drawLineChart(ctx, canvas, temps, labels, "#FFEB3B", "°C");
 }
 
 //
@@ -168,11 +185,12 @@ function updateTempChart(hours) {
 //
 function updateRainChart(hours) {
     const canvas = document.getElementById("rainChart");
-    const ctx = canvas.getContext("2d");
+    const ctx = fixCanvasResolution(canvas);
+
     const rain = hours.map(h => h.rain_chance);
     const labels = hours.map(h => h.time);
 
-    drawLineChart(ctx, canvas, rain, labels, "black", "%");
+    drawLineChart(ctx, canvas, rain, labels, "#80DEEA", "%");
 }
 
 //
@@ -201,7 +219,7 @@ function updateNext10Cards(hours) {
 }
 
 //
-// WEEKLY
+// WEEKLY FORECAST
 //
 function updateWeekly(days) {
     const grid = document.getElementById("weeklyForecast");
@@ -223,13 +241,13 @@ function updateWeekly(days) {
 }
 
 //
-// GENERIC LINE CHART
+// GENERIC LINE CHART (SHARP)
 //
 function drawLineChart(ctx, canvas, values, labels, color, yLabel) {
     if (!values.length) return;
 
-    const w = canvas.width;
-    const h = canvas.height;
+    const w = canvas.getBoundingClientRect().width;
+    const h = canvas.getBoundingClientRect().height;
     const pad = 35;
 
     const min = Math.min(...values);
@@ -241,8 +259,8 @@ function drawLineChart(ctx, canvas, values, labels, color, yLabel) {
     ctx.clearRect(0, 0, w, h);
 
     // Y-axis label
-    ctx.fillStyle = "black";
-    ctx.font = "10px Arial";
+    ctx.fillStyle = "white";
+    ctx.font = "12px Arial";
     ctx.fillText(yLabel, 5, 15);
 
     // X-axis label
