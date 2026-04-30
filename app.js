@@ -40,7 +40,9 @@ async function fetchAndRender(url) {
         updateWindCompass(current.wind_dir);
         updateUV(data.location.localtime, current);
 
-        updateNext10Chart(next10);
+        updateTempChart(hours);
+        updateRainChart(hours);
+        updateNext10Cards(next10);
         updateWeekly(data.next7Days || []);
 
     } catch (err) {
@@ -150,16 +152,52 @@ function estimateUV(localtime, rainChance, condition) {
 }
 
 //
-// NEXT 10 HOURS CHART (TEMPERATURE)
+// TEMPERATURE CHART (NEXT 12 HOURS)
 //
-function updateNext10Chart(hours) {
-    const canvas = document.getElementById("next10Chart");
+function updateTempChart(hours) {
+    const canvas = document.getElementById("tempChart");
     const ctx = canvas.getContext("2d");
-
     const temps = hours.map(h => h.temp);
     const labels = hours.map(h => h.time);
 
     drawLineChart(ctx, canvas, temps, labels, "#FFEB3B", "°C");
+}
+
+//
+// RAIN CHANCE CHART (NEXT 12 HOURS)
+//
+function updateRainChart(hours) {
+    const canvas = document.getElementById("rainChart");
+    const ctx = canvas.getContext("2d");
+    const rain = hours.map(h => h.rain_chance);
+    const labels = hours.map(h => h.time);
+
+    drawLineChart(ctx, canvas, rain, labels, "#80DEEA", "%");
+}
+
+//
+// NEXT 10 HOURS CARDS (HORIZONTAL SCROLL)
+//
+function updateNext10Cards(hours) {
+    const container = document.getElementById("next10Scroll");
+    container.innerHTML = "";
+
+    hours.forEach(h => {
+        const card = document.createElement("div");
+        card.className = "next10-card";
+
+        card.innerHTML = `
+            <div style="font-size:14px;opacity:0.8">${formatHour(h.time)}</div>
+            <div style="font-size:22px;font-weight:bold">${h.temp}°C</div>
+            <img src="https:${h.icon}" alt="">
+            <div style="font-size:13px">${h.condition}</div>
+            <div style="font-size:11px;opacity:0.8">
+                Feels like ${h.feels_like}°C • ${h.humidity}% humidity
+            </div>
+        `;
+
+        container.appendChild(card);
+    });
 }
 
 //
