@@ -29,18 +29,24 @@ async function fetchAndRender(url) {
         const response = await fetch(url);
         const data = await response.json();
 
-        const current = data.next12Hours[0];
+        const hours = data.next12Hours || [];
+        if (!hours.length) return;
+
+        const current = hours[0];
+        const next3 = hours.slice(0, 3);
+        const next9 = hours.slice(3, 12);
 
         updateHero(data, current);
         updateTodaySummary(current, data.astro);
         updateWindCompass(current.wind_dir);
         updateUV(data.location.localtime, current);
 
-        updateHourly(data.next12Hours);
-        updateWeekly(data.next7Days);
-        updateSunArc(data.location.localtime, data.astro.sunrise, data.astro.sunset);
-        updateTempChart(data.next12Hours);
-        updateRainChart(data.next12Hours);
+        updateNext3Hours(next3);
+        updateNext9Hours(next9);
+
+        updateTempChart(hours);
+        updateRainChart(hours);
+        updateWeekly(data.next7Days || []);
 
     } catch (err) {
         console.error("Weather fetch error:", err);
@@ -111,33 +117,28 @@ function updateUV(localtime, current) {
     uvText.textContent = `UV: ${uv}`;
 }
 
-// Approximate UV based on time of day + rain chance + condition
 function estimateUV(localtime, rainChance, condition) {
-    // localtime: "YYYY-MM-DD HH:MM"
     const timePart = localtime.split(" ")[1];
     const [hourStr, minuteStr] = timePart.split(":");
     const hour = parseInt(hourStr, 10) + parseInt(minuteStr, 10) / 60;
 
-    // Peak around 13:00, fade towards morning/evening
-    let t = 1 - Math.abs(hour - 13) / 6; // 13±6 => 7..19
+    let t = 1 - Math.abs(hour - 13) / 6;
     t = Math.max(0, Math.min(1, t));
 
-    // Cloud / rain factor
     let cloudFactor = 1 - (rainChance / 100) * 0.6;
     const condLower = condition.toLowerCase();
     if (condLower.includes("cloud")) cloudFactor *= 0.8;
     if (condLower.includes("rain")) cloudFactor *= 0.6;
 
     const uvRaw = 11 * t * cloudFactor;
-    const uv = Math.round(Math.max(0, Math.min(11, uvRaw)));
-    return uv;
+    return Math.round(Math.max(0, Math.min(11, uvRaw)));
 }
 
 //
-// HOURLY FORECAST
+// NEXT 3 HOURS
 //
-function updateHourly(hours) {
-    const container = document.getElementById("hourlyForecast");
+function updateNext3Hours(hours) {
+    const container = document.getElementById("next3Hours");
     container.innerHTML = "";
 
     hours.forEach(h => {
@@ -156,7 +157,29 @@ function updateHourly(hours) {
 }
 
 //
-// WEEKLY FORECAST
+// NEXT 9 HOURS
+//
+function updateNext9Hours(hours) {
+    const container = document.getElementById("next9Hours");
+    container.innerHTML = "";
+
+    hours.forEach(h => {
+        const card = document.createElement("div");
+        card.className = "hour-card";
+
+        card.innerHTML = `
+            <div>${formatHour(h.time)}</div>
+            <img src="https:${h.icon}" alt="">
+            <div>${h.temp}°C</div>
+            <div style="font-size:12px;opacity:0.8">${h.condition}</div>
+        `;
+
+        container.appendChild(card);
+    });
+}
+
+//
+// NEXT 7 DAYS
 //
 function updateWeekly(days) {
     const grid = document.getElementById("weeklyForecast");
@@ -178,92 +201,38 @@ function updateWeekly(days) {
 }
 
 //
-// SUNRISE / SUNSET ARC
+// TEMPERATURE TREND CHART (NEXT 12H)
 //
-function updateSunArc(localtime, sunriseStr, sunsetStr) {
-    const canvas = document.getElementById("sunArcCanvas");
-    const ctx = canvas.getContext("2d");
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-    if (!localtime || !sunriseStr || !sunsetStr) return;
-
-    const sunrise = parseSunTime(localtime, sunriseStr);
-    const sunset = parseSunTime(localtime, sunsetStr);
-    const now = new Date(localtime.replace(" ", "T"));
-
-    document.getElementById("sunTimesText").textContent =
-        `Sunrise ${sunriseStr} • Sunset ${sunsetStr}`;
-
-    const w = canvas.width;
-    const h = canvas.height;
-    const cx = w / 2;
-    const cy = h * 0.9;
-    const r = Math.min(w, h) * 0.8 / 2;
-
-    // Base arc
-    ctx.beginPath();
-    ctx.strokeStyle = "rgba(255,255,255,0.4)";
-    ctx.lineWidth = 4;
-    ctx.arc(cx, cy, r, Math.PI, 2 * Math.PI);
-    ctx.stroke();
-
-    // Sun position
-    const total = sunset - sunrise;
-    const elapsed = Math.min(Math.max(now - sunrise, 0), total);
-    const t = total > 0 ? elapsed / total : 0.5;
-
-    const angle = Math.PI + t * Math.PI;
-    const sunX = cx + r * Math.cos(angle);
-    const sunY = cy + r * Math.sin(angle);
-
-    ctx.beginPath();
-    ctx.fillStyle = "#FFD54F";
-    ctx.arc(sunX, sunY, 8, 0, 2 * Math.PI);
-    ctx.fill();
-}
-
-function parseSunTime(localtime, hm) {
-    // localtime: "YYYY-MM-DD HH:MM", hm: "05:27 AM"
-    const [datePart] = localtime.split(" ");
-    const iso = `${datePart} ${hm}`;
-    return new Date(iso.replace(" ", "T"));
-}
-
-//
-// TEMPERATURE TREND CHART
-//
-updateTempChart(data.next12Hours);
-
 function updateTempChart(hours) {
     const canvas = document.getElementById("tempChart");
     const ctx = canvas.getContext("2d");
     const temps = hours.map(h => h.temp);
+    const labels = hours.map(h => h.time);
 
-    drawLineChart(ctx, canvas, temps, "#FFEB3B", "°C");
+    drawLineChart(ctx, canvas, temps, labels, "#FFEB3B", "°C");
 }
 
 //
-// RAIN CHANCE TREND CHART
+// RAIN CHANCE TREND CHART (NEXT 12H)
 //
-updateRainChart(data.next12Hours);
-
 function updateRainChart(hours) {
     const canvas = document.getElementById("rainChart");
     const ctx = canvas.getContext("2d");
     const rain = hours.map(h => h.rain_chance);
+    const labels = hours.map(h => h.time);
 
-    drawLineChart(ctx, canvas, rain, "#80DEEA", "%");
+    drawLineChart(ctx, canvas, rain, labels, "#80DEEA", "%");
 }
 
 //
 // GENERIC LINE CHART
 //
-function drawLineChart(ctx, canvas, values, color, yLabel) {
+function drawLineChart(ctx, canvas, values, labels, color, yLabel) {
     if (!values.length) return;
 
     const w = canvas.width;
     const h = canvas.height;
-    const pad = 30;
+    const pad = 35;
 
     const min = Math.min(...values);
     const max = Math.max(...values);
@@ -279,7 +248,7 @@ function drawLineChart(ctx, canvas, values, color, yLabel) {
     ctx.fillText(yLabel, 5, 15);
 
     // X-axis label
-    ctx.fillText("Hours →", w - 70, h - 5);
+    ctx.fillText("Time →", w - 70, h - 5);
 
     // Axis line
     ctx.strokeStyle = "rgba(255,255,255,0.3)";
@@ -323,14 +292,14 @@ function drawLineChart(ctx, canvas, values, color, yLabel) {
 
     ctx.stroke();
 
-    // X-axis hour labels
+    // X-axis time labels
     ctx.fillStyle = "rgba(255,255,255,0.8)";
     ctx.font = "11px Arial";
 
-    values.forEach((_, i) => {
-        if (i % 3 === 0 || i === values.length - 1) {
+    labels.forEach((t, i) => {
+        if (i % 3 === 0 || i === labels.length - 1) {
             const x = pad + i * step;
-            ctx.fillText(i.toString(), x - 3, h - pad + 15);
+            ctx.fillText(formatHourShort(t), x - 14, h - pad + 15);
         }
     });
 }
@@ -339,5 +308,9 @@ function drawLineChart(ctx, canvas, values, color, yLabel) {
 // HELPERS
 //
 function formatHour(t) {
-    return new Date(t).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+    return new Date(t.replace(" ", "T")).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+}
+
+function formatHourShort(t) {
+    return new Date(t.replace(" ", "T")).toLocaleTimeString([], { hour: "2-digit" });
 }
