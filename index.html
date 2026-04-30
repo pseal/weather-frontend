@@ -10,7 +10,7 @@
         margin: 0;
         font-family: Arial, Helvetica, sans-serif;
         background: linear-gradient(to bottom, #4facfe, #00f2fe);
-        color: black;
+        color: #fff;
         display: flex;
         flex-direction: column;
         align-items: center;
@@ -241,6 +241,31 @@
         background: rgba(0,0,0,0.1);
     }
 
+    /* NEXT 10 HOURS SCROLL ROW */
+    .next10-scroll {
+        width: 100%;
+        max-width: 900px;
+        display: flex;
+        overflow-x: auto;
+        gap: 12px;
+        padding-bottom: 10px;
+        margin-bottom: 20px;
+    }
+
+    .next10-card {
+        min-width: 140px;
+        background: rgba(255,255,255,0.18);
+        padding: 14px;
+        border-radius: 16px;
+        text-align: center;
+        backdrop-filter: blur(10px);
+        box-shadow: 0 6px 16px rgba(0,0,0,0.25);
+    }
+
+    .next10-card img {
+        width: 45px;
+    }
+
     /* WEEKLY */
     .weekly-grid {
         width: 100%;
@@ -316,11 +341,21 @@
     <div class="hint" id="uvText">UV: --</div>
 </div>
 
-<!-- NEXT 10 HOURS CHART -->
+<!-- TEMPERATURE CHART -->
 <div class="chart-card">
-    <h3>Next 10 Hours (Temperature)</h3>
-    <canvas id="next10Chart" width="320" height="160"></canvas>
+    <h3>Temperature Trend (Next 12h)</h3>
+    <canvas id="tempChart" width="320" height="160"></canvas>
 </div>
+
+<!-- RAIN CHANCE CHART -->
+<div class="chart-card">
+    <h3>Rain Chance Trend (Next 12h)</h3>
+    <canvas id="rainChart" width="320" height="160"></canvas>
+</div>
+
+<!-- NEXT 10 HOURS SCROLL -->
+<h2 class="section-title">Next 10 Hours</h2>
+<div class="next10-scroll" id="next10Scroll"></div>
 
 <!-- WEEKLY -->
 <h2 class="section-title">Next 7 Days</h2>
