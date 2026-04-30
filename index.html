@@ -57,46 +57,16 @@
         transform: translateY(-1px);
     }
 
-    /* HERO + SIDE HOURS ROW */
-    .hero-row {
-        width: 100%;
-        max-width: 900px;
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        gap: 12px;
-        margin-bottom: 20px;
-    }
-
-    .side-hour-card {
-        flex: 1;
-        min-width: 140px;
-        background: rgba(255,255,255,0.18);
-        padding: 12px;
-        border-radius: 16px;
-        text-align: center;
-        backdrop-filter: blur(10px);
-        box-shadow: 0 6px 16px rgba(0,0,0,0.25);
-    }
-
-    .side-hour-card img {
-        width: 40px;
-    }
-
-    .bottom-hour {
-        width: 100%;
-        max-width: 300px;
-        margin: 0 auto 20px auto;
-    }
-
     /* HERO SECTION */
     .hero {
-        flex: 2;
+        width: 100%;
+        max-width: 600px;
         background: rgba(255,255,255,0.15);
         padding: 20px;
         border-radius: 16px;
         text-align: center;
         backdrop-filter: blur(10px);
+        margin-bottom: 20px;
         box-shadow: 0 10px 25px rgba(0,0,0,0.25);
         opacity: 0;
         transform: translateY(10px);
@@ -146,15 +116,27 @@
         100% { transform: translateY(0px); }
     }
 
-    /* Mobile responsive */
-    @media (max-width: 700px) {
-        .hero-row {
-            flex-direction: column;
-        }
-        .side-hour-card {
-            width: 100%;
-            max-width: 300px;
-        }
+    /* NEXT 2 HOURS BELOW HERO */
+    .next2-container {
+        width: 100%;
+        max-width: 600px;
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+        margin-bottom: 20px;
+    }
+
+    .next2-card {
+        background: rgba(255,255,255,0.18);
+        padding: 14px;
+        border-radius: 16px;
+        text-align: center;
+        backdrop-filter: blur(10px);
+        box-shadow: 0 6px 16px rgba(0,0,0,0.25);
+    }
+
+    .next2-card img {
+        width: 45px;
     }
 
     /* SUMMARY PANEL */
@@ -297,21 +279,19 @@
     <button onclick="getWeather()">Search</button>
 </div>
 
-<!-- HERO + NEXT 3 HOURS -->
-<div class="hero-row">
-    <div class="side-hour-card" id="sideHour1"></div>
-
-    <div class="hero" id="heroSection">
-        <h2 id="locationName">City</h2>
-        <div class="temp" id="currentTemp">--°C</div>
-        <div class="condition" id="currentCondition">Condition</div>
-        <div class="hero-sub" id="heroExtra">Feels like --°C • Humidity --%</div>
-    </div>
-
-    <div class="side-hour-card" id="sideHour2"></div>
+<!-- HERO -->
+<div class="hero" id="heroSection">
+    <h2 id="locationName">City</h2>
+    <div class="temp" id="currentTemp">--°C</div>
+    <div class="condition" id="currentCondition">Condition</div>
+    <div class="hero-sub" id="heroExtra">Feels like --°C • Humidity --%</div>
 </div>
 
-<div class="side-hour-card bottom-hour" id="sideHour3"></div>
+<!-- NEXT 2 HOURS BELOW HERO -->
+<div class="next2-container">
+    <div class="next2-card" id="nextHour1"></div>
+    <div class="next2-card" id="nextHour2"></div>
+</div>
 
 <!-- SUMMARY -->
 <div class="summary-card">
@@ -336,15 +316,10 @@
     <div class="hint" id="uvText">UV: --</div>
 </div>
 
-<!-- CHARTS -->
+<!-- NEXT 10 HOURS CHART -->
 <div class="chart-card">
-    <h3>Temperature Trend (Next 12h)</h3>
-    <canvas id="tempChart" width="320" height="160"></canvas>
-</div>
-
-<div class="chart-card">
-    <h3>Rain Chance Trend (Next 12h)</h3>
-    <canvas id="rainChart" width="320" height="160"></canvas>
+    <h3>Next 10 Hours (Temperature)</h3>
+    <canvas id="next10Chart" width="320" height="160"></canvas>
 </div>
 
 <!-- WEEKLY -->
