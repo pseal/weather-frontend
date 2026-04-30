@@ -57,16 +57,46 @@
         transform: translateY(-1px);
     }
 
+    /* HERO + SIDE HOURS ROW */
+    .hero-row {
+        width: 100%;
+        max-width: 900px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 12px;
+        margin-bottom: 20px;
+    }
+
+    .side-hour-card {
+        flex: 1;
+        min-width: 140px;
+        background: rgba(255,255,255,0.18);
+        padding: 12px;
+        border-radius: 16px;
+        text-align: center;
+        backdrop-filter: blur(10px);
+        box-shadow: 0 6px 16px rgba(0,0,0,0.25);
+    }
+
+    .side-hour-card img {
+        width: 40px;
+    }
+
+    .bottom-hour {
+        width: 100%;
+        max-width: 300px;
+        margin: 0 auto 20px auto;
+    }
+
     /* HERO SECTION */
     .hero {
-        width: 100%;
-        max-width: 600px;
+        flex: 2;
         background: rgba(255,255,255,0.15);
         padding: 20px;
         border-radius: 16px;
         text-align: center;
         backdrop-filter: blur(10px);
-        margin-bottom: 20px;
         box-shadow: 0 10px 25px rgba(0,0,0,0.25);
         opacity: 0;
         transform: translateY(10px);
@@ -104,7 +134,6 @@
         opacity: 0.9;
     }
 
-    /* Animated Weather Icon */
     .animated-icon {
         width: 70px;
         height: 70px;
@@ -117,7 +146,18 @@
         100% { transform: translateY(0px); }
     }
 
-    /* TODAY SUMMARY PANEL */
+    /* Mobile responsive */
+    @media (max-width: 700px) {
+        .hero-row {
+            flex-direction: column;
+        }
+        .side-hour-card {
+            width: 100%;
+            max-width: 300px;
+        }
+    }
+
+    /* SUMMARY PANEL */
     .summary-card {
         width: 100%;
         max-width: 900px;
@@ -128,10 +168,7 @@
         box-shadow: 0 8px 20px rgba(0,0,0,0.25);
         margin-bottom: 20px;
     }
-    .summary-card h3 {
-        margin-top: 0;
-        font-size: 20px;
-    }
+
     .summary-row {
         display: flex;
         justify-content: space-between;
@@ -139,7 +176,7 @@
         font-size: 14px;
     }
 
-    /* Wind Compass */
+    /* Compass */
     .compass-container {
         width: 120px;
         height: 120px;
@@ -177,7 +214,7 @@
         transition: transform 0.8s ease;
     }
 
-    /* UV Index Bar */
+    /* UV Bar */
     .uv-bar {
         width: 100%;
         height: 12px;
@@ -203,7 +240,7 @@
         transition: left 0.5s ease;
     }
 
-    /* CHARTS FULL WIDTH */
+    /* CHARTS */
     .chart-card {
         width: 100%;
         max-width: 900px;
@@ -215,12 +252,6 @@
         margin-bottom: 20px;
     }
 
-    .chart-card h3 {
-        margin-top: 0;
-        font-size: 18px;
-        margin-bottom: 8px;
-    }
-
     canvas {
         width: 100%;
         max-width: 100%;
@@ -228,42 +259,7 @@
         background: rgba(0,0,0,0.1);
     }
 
-    /* HOURLY & DAILY */
-    h2.section-title {
-        margin: 10px 0;
-        text-shadow: 0 1px 4px rgba(0,0,0,0.3);
-    }
-
-    .hourly-container {
-        width: 100%;
-        max-width: 900px;
-        overflow-x: auto;
-        display: flex;
-        gap: 12px;
-        padding-bottom: 10px;
-        margin-bottom: 20px;
-    }
-
-    .hour-card {
-        min-width: 120px;
-        background: rgba(255,255,255,0.2);
-        padding: 12px;
-        border-radius: 12px;
-        text-align: center;
-        backdrop-filter: blur(8px);
-        box-shadow: 0 6px 16px rgba(0,0,0,0.25);
-        transition: transform 0.2s ease, box-shadow 0.2s ease;
-    }
-
-    .hour-card:hover {
-        transform: translateY(-3px);
-        box-shadow: 0 10px 24px rgba(0,0,0,0.3);
-    }
-
-    .hour-card img {
-        width: 50px;
-    }
-
+    /* WEEKLY */
     .weekly-grid {
         width: 100%;
         max-width: 900px;
@@ -280,30 +276,13 @@
         text-align: center;
         backdrop-filter: blur(8px);
         box-shadow: 0 6px 16px rgba(0,0,0,0.25);
-        transition: transform 0.2s ease, box-shadow 0.2s ease;
     }
 
-    .day-card:hover {
-        transform: translateY(-3px);
-        box-shadow: 0 10px 24px rgba(0,0,0,0.3);
-    }
-
-    .day-card img {
-        width: 50px;
-    }
-
-    /* FOOTER */
     footer {
         margin: 10px 0;
         opacity: 0.8;
         font-size: 14px;
         text-align: center;
-    }
-
-    .hint {
-        font-size: 12px;
-        opacity: 0.8;
-        margin-top: 4px;
     }
 </style>
 </head>
@@ -318,18 +297,25 @@
     <button onclick="getWeather()">Search</button>
 </div>
 
-<!-- HERO SECTION -->
-<div class="hero" id="heroSection">
-    <h2 id="locationName">City</h2>
-    <div class="temp" id="currentTemp">--°C</div>
-    <div class="condition" id="currentCondition">Condition</div>
-    <div class="hero-sub" id="heroExtra">Feels like --°C • Humidity --%</div>
+<!-- HERO + NEXT 3 HOURS -->
+<div class="hero-row">
+    <div class="side-hour-card" id="sideHour1"></div>
+
+    <div class="hero" id="heroSection">
+        <h2 id="locationName">City</h2>
+        <div class="temp" id="currentTemp">--°C</div>
+        <div class="condition" id="currentCondition">Condition</div>
+        <div class="hero-sub" id="heroExtra">Feels like --°C • Humidity --%</div>
+    </div>
+
+    <div class="side-hour-card" id="sideHour2"></div>
 </div>
 
-<!-- TODAY SUMMARY PANEL -->
-<div class="summary-card" id="todaySummary">
-    <h3>Today Summary</h3>
+<div class="side-hour-card bottom-hour" id="sideHour3"></div>
 
+<!-- SUMMARY -->
+<div class="summary-card">
+    <h3>Today Summary</h3>
     <div class="summary-row"><span>Feels Like:</span> <span id="sumFeels">--°C</span></div>
     <div class="summary-row"><span>Humidity:</span> <span id="sumHumidity">--%</span></div>
     <div class="summary-row"><span>Wind:</span> <span id="sumWind">-- kph</span></div>
@@ -350,33 +336,23 @@
     <div class="hint" id="uvText">UV: --</div>
 </div>
 
-<!-- FULL-WIDTH TEMPERATURE CHART -->
+<!-- CHARTS -->
 <div class="chart-card">
     <h3>Temperature Trend (Next 12h)</h3>
     <canvas id="tempChart" width="320" height="160"></canvas>
 </div>
 
-<!-- FULL-WIDTH RAIN CHANCE CHART -->
 <div class="chart-card">
     <h3>Rain Chance Trend (Next 12h)</h3>
     <canvas id="rainChart" width="320" height="160"></canvas>
 </div>
 
-<!-- NEXT 3 HOURS -->
-<h2 class="section-title">Next 3 Hours</h2>
-<div class="hourly-container" id="next3Hours"></div>
-
-<!-- NEXT 9 HOURS -->
-<h2 class="section-title">Next 9 Hours</h2>
-<div class="hourly-container" id="next9Hours"></div>
-
-<!-- NEXT 7 DAYS -->
+<!-- WEEKLY -->
 <h2 class="section-title">Next 7 Days</h2>
 <div class="weekly-grid" id="weeklyForecast"></div>
 
 <footer>
-    Powered by WeatherAPI • Built by Prasenjit<br/>
-    <span class="hint">If location access is allowed, we auto-detect your weather.</span>
+    Powered by WeatherAPI • Built by Prasenjit
 </footer>
 
 <script src="app.js"></script>
