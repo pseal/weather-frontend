@@ -160,7 +160,7 @@ function updateTempChart(hours) {
     const temps = hours.map(h => h.temp);
     const labels = hours.map(h => h.time);
 
-    drawLineChart(ctx, canvas, temps, labels, "#FFEB3B", "°C");
+    drawLineChart(ctx, canvas, temps, labels, "black", "°C");
 }
 
 //
@@ -172,7 +172,7 @@ function updateRainChart(hours) {
     const rain = hours.map(h => h.rain_chance);
     const labels = hours.map(h => h.time);
 
-    drawLineChart(ctx, canvas, rain, labels, "#80DEEA", "%");
+    drawLineChart(ctx, canvas, rain, labels, "black", "%");
 }
 
 //
@@ -241,8 +241,8 @@ function drawLineChart(ctx, canvas, values, labels, color, yLabel) {
     ctx.clearRect(0, 0, w, h);
 
     // Y-axis label
-    ctx.fillStyle = "white";
-    ctx.font = "12px Arial";
+    ctx.fillStyle = "black";
+    ctx.font = "10px Arial";
     ctx.fillText(yLabel, 5, 15);
 
     // X-axis label
