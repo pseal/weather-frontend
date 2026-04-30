@@ -1,6 +1,6 @@
 const API_URL = "https://weather-backend-production-0667.up.railway.app/api/weather?q=";
 
-// AUTO-DETECT LOCATION ON LOAD
+// AUTO-DETECT LOCATION
 window.addEventListener("DOMContentLoaded", () => {
     if ("geolocation" in navigator) {
         navigator.geolocation.getCurrentPosition(
@@ -9,14 +9,12 @@ window.addEventListener("DOMContentLoaded", () => {
                 const query = `${latitude},${longitude}`;
                 await fetchAndRender(API_URL + encodeURIComponent(query));
             },
-            () => {
-                console.warn("Geolocation denied. Waiting for manual search.");
-            }
+            () => console.warn("Geolocation denied")
         );
     }
 });
 
-// MAIN SEARCH
+// SEARCH
 async function getWeather() {
     const city = document.getElementById("cityInput").value.trim();
     if (!city) return;
@@ -34,15 +32,12 @@ async function fetchAndRender(url) {
 
         const current = hours[0];
         const next3 = hours.slice(0, 3);
-        const next9 = hours.slice(3, 12);
 
         updateHero(data, current);
+        updateSideHours(next3);
         updateTodaySummary(current, data.astro);
         updateWindCompass(current.wind_dir);
         updateUV(data.location.localtime, current);
-
-        updateNext3Hours(next3);
-        updateNext9Hours(next9);
 
         updateTempChart(hours);
         updateRainChart(hours);
@@ -54,7 +49,7 @@ async function fetchAndRender(url) {
 }
 
 //
-// HERO SECTION
+// HERO
 //
 function updateHero(data, current) {
     const hero = document.getElementById("heroSection");
@@ -75,7 +70,28 @@ function updateHero(data, current) {
 }
 
 //
-// TODAY SUMMARY
+// SIDE HOURS (Next 3 Hours around hero)
+//
+function updateSideHours(next3) {
+    const [h1, h2, h3] = next3;
+
+    const makeCard = (h) => `
+        <div style="font-size:14px;opacity:0.8">${formatHour(h.time)}</div>
+        <div style="font-size:28px;font-weight:bold">${h.temp}°C</div>
+        <img src="https:${h.icon}" alt="">
+        <div style="font-size:14px">${h.condition}</div>
+        <div style="font-size:12px;opacity:0.8">
+            Feels like ${h.feels_like}°C • ${h.humidity}% humidity
+        </div>
+    `;
+
+    document.getElementById("sideHour1").innerHTML = makeCard(h1);
+    document.getElementById("sideHour2").innerHTML = makeCard(h2);
+    document.getElementById("sideHour3").innerHTML = makeCard(h3);
+}
+
+//
+// SUMMARY
 //
 function updateTodaySummary(current, astro) {
     document.getElementById("sumFeels").textContent = `${current.feels_like}°C`;
@@ -104,7 +120,7 @@ function updateWindCompass(dir) {
 }
 
 //
-// UV INDEX (APPROXIMATION)
+// UV INDEX
 //
 function updateUV(localtime, current) {
     const uv = estimateUV(localtime, current.rain_chance, current.condition);
@@ -135,51 +151,7 @@ function estimateUV(localtime, rainChance, condition) {
 }
 
 //
-// NEXT 3 HOURS
-//
-function updateNext3Hours(hours) {
-    const container = document.getElementById("next3Hours");
-    container.innerHTML = "";
-
-    hours.forEach(h => {
-        const card = document.createElement("div");
-        card.className = "hour-card";
-
-        card.innerHTML = `
-            <div>${formatHour(h.time)}</div>
-            <img src="https:${h.icon}" alt="">
-            <div>${h.temp}°C</div>
-            <div style="font-size:12px;opacity:0.8">${h.condition}</div>
-        `;
-
-        container.appendChild(card);
-    });
-}
-
-//
-// NEXT 9 HOURS
-//
-function updateNext9Hours(hours) {
-    const container = document.getElementById("next9Hours");
-    container.innerHTML = "";
-
-    hours.forEach(h => {
-        const card = document.createElement("div");
-        card.className = "hour-card";
-
-        card.innerHTML = `
-            <div>${formatHour(h.time)}</div>
-            <img src="https:${h.icon}" alt="">
-            <div>${h.temp}°C</div>
-            <div style="font-size:12px;opacity:0.8">${h.condition}</div>
-        `;
-
-        container.appendChild(card);
-    });
-}
-
-//
-// NEXT 7 DAYS
+// WEEKLY
 //
 function updateWeekly(days) {
     const grid = document.getElementById("weeklyForecast");
@@ -201,7 +173,7 @@ function updateWeekly(days) {
 }
 
 //
-// TEMPERATURE TREND CHART (NEXT 12H)
+// CHARTS
 //
 function updateTempChart(hours) {
     const canvas = document.getElementById("tempChart");
@@ -212,9 +184,6 @@ function updateTempChart(hours) {
     drawLineChart(ctx, canvas, temps, labels, "#FFEB3B", "°C");
 }
 
-//
-// RAIN CHANCE TREND CHART (NEXT 12H)
-//
 function updateRainChart(hours) {
     const canvas = document.getElementById("rainChart");
     const ctx = canvas.getContext("2d");
@@ -224,9 +193,6 @@ function updateRainChart(hours) {
     drawLineChart(ctx, canvas, rain, labels, "#80DEEA", "%");
 }
 
-//
-// GENERIC LINE CHART
-//
 function drawLineChart(ctx, canvas, values, labels, color, yLabel) {
     if (!values.length) return;
 
@@ -308,9 +274,14 @@ function drawLineChart(ctx, canvas, values, labels, color, yLabel) {
 // HELPERS
 //
 function formatHour(t) {
-    return new Date(t.replace(" ", "T")).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+    return new Date(t.replace(" ", "T")).toLocaleTimeString([], {
+        hour: "2-digit",
+        minute: "2-digit"
+    });
 }
 
 function formatHourShort(t) {
-    return new Date(t.replace(" ", "T")).toLocaleTimeString([], { hour: "2-digit" });
+    return new Date(t.replace(" ", "T")).toLocaleTimeString([], {
+        hour: "2-digit"
+    });
 }
