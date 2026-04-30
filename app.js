@@ -28,19 +28,19 @@ async function fetchAndRender(url) {
         const data = await response.json();
 
         const hours = data.next12Hours || [];
-        if (!hours.length) return;
+        if (hours.length < 3) return;
 
         const current = hours[0];
-        const next3 = hours.slice(0, 3);
+        const next2 = hours.slice(1, 3);   // next 2 hours
+        const next10 = hours.slice(2, 12); // remaining 10 hours
 
         updateHero(data, current);
-        updateSideHours(next3);
+        updateNext2(next2);
         updateTodaySummary(current, data.astro);
         updateWindCompass(current.wind_dir);
         updateUV(data.location.localtime, current);
 
-        updateTempChart(hours);
-        updateRainChart(hours);
+        updateNext10Chart(next10);
         updateWeekly(data.next7Days || []);
 
     } catch (err) {
@@ -70,10 +70,10 @@ function updateHero(data, current) {
 }
 
 //
-// SIDE HOURS (Next 3 Hours around hero)
+// NEXT 2 HOURS BELOW HERO
 //
-function updateSideHours(next3) {
-    const [h1, h2, h3] = next3;
+function updateNext2(next2) {
+    const [h1, h2] = next2;
 
     const makeCard = (h) => `
         <div style="font-size:14px;opacity:0.8">${formatHour(h.time)}</div>
@@ -85,9 +85,8 @@ function updateSideHours(next3) {
         </div>
     `;
 
-    document.getElementById("sideHour1").innerHTML = makeCard(h1);
-    document.getElementById("sideHour2").innerHTML = makeCard(h2);
-    document.getElementById("sideHour3").innerHTML = makeCard(h3);
+    document.getElementById("nextHour1").innerHTML = makeCard(h1);
+    document.getElementById("nextHour2").innerHTML = makeCard(h2);
 }
 
 //
@@ -151,6 +150,19 @@ function estimateUV(localtime, rainChance, condition) {
 }
 
 //
+// NEXT 10 HOURS CHART (TEMPERATURE)
+//
+function updateNext10Chart(hours) {
+    const canvas = document.getElementById("next10Chart");
+    const ctx = canvas.getContext("2d");
+
+    const temps = hours.map(h => h.temp);
+    const labels = hours.map(h => h.time);
+
+    drawLineChart(ctx, canvas, temps, labels, "#FFEB3B", "°C");
+}
+
+//
 // WEEKLY
 //
 function updateWeekly(days) {
@@ -173,26 +185,8 @@ function updateWeekly(days) {
 }
 
 //
-// CHARTS
+// GENERIC LINE CHART
 //
-function updateTempChart(hours) {
-    const canvas = document.getElementById("tempChart");
-    const ctx = canvas.getContext("2d");
-    const temps = hours.map(h => h.temp);
-    const labels = hours.map(h => h.time);
-
-    drawLineChart(ctx, canvas, temps, labels, "#FFEB3B", "°C");
-}
-
-function updateRainChart(hours) {
-    const canvas = document.getElementById("rainChart");
-    const ctx = canvas.getContext("2d");
-    const rain = hours.map(h => h.rain_chance);
-    const labels = hours.map(h => h.time);
-
-    drawLineChart(ctx, canvas, rain, labels, "#80DEEA", "%");
-}
-
 function drawLineChart(ctx, canvas, values, labels, color, yLabel) {
     if (!values.length) return;
 
@@ -263,7 +257,7 @@ function drawLineChart(ctx, canvas, values, labels, color, yLabel) {
     ctx.font = "11px Arial";
 
     labels.forEach((t, i) => {
-        if (i % 3 === 0 || i === labels.length - 1) {
+        if (i % 2 === 0 || i === labels.length - 1) {
             const x = pad + i * step;
             ctx.fillText(formatHourShort(t), x - 14, h - pad + 15);
         }
