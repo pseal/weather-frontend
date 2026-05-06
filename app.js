@@ -1,7 +1,3 @@
-// =========================
-//  LANGUAGE TOGGLE
-// =========================
-
 let currentLang = "en";
 
 const LANG = {
@@ -48,10 +44,16 @@ const LANG = {
     }
 };
 
+let lastWeatherData = null;
+
 function toggleLanguage() {
     currentLang = currentLang === "en" ? "fi" : "en";
     applyLanguage();
-    if (window.lastWeatherData) renderWeather(window.lastWeatherData);
+
+    // Re-render existing data in new language if we have it
+    if (lastWeatherData) {
+        renderWeather(lastWeatherData);
+    }
 }
 
 function applyLanguage() {
@@ -69,7 +71,7 @@ function applyLanguage() {
     document.querySelector(".summary-card h3:nth-of-type(2)").textContent = t.windDirection;
     document.querySelector(".summary-card h3:nth-of-type(3)").textContent = t.uvIndex;
 
-    document.querySelector('#cityInput').placeholder = t.searchPlaceholder;
+    document.querySelector('input#cityInput').placeholder = t.searchPlaceholder;
     document.querySelector('.search-container button').textContent = t.searchButton;
 
     document.querySelectorAll(".chart-card h3")[0].textContent = t.tempTrend;
@@ -78,10 +80,6 @@ function applyLanguage() {
     document.querySelectorAll(".section-title")[0].textContent = t.next10Hours;
     document.querySelectorAll(".section-title")[1].textContent = t.next7Days;
 }
-
-// =========================
-//  CONDITION TRANSLATION
-// =========================
 
 const CONDITION_FI = {
     "Sunny": "Aurinkoista",
@@ -114,10 +112,6 @@ function translateCondition(text) {
     return text;
 }
 
-// =========================
-//  API
-// =========================
-
 const API_URL = "https://weather-backend-production-0667.up.railway.app/api/weather?q=";
 
 // AUTO-DETECT LOCATION
@@ -149,7 +143,7 @@ async function fetchAndRender(url) {
         const response = await fetch(url);
         const data = await response.json();
 
-        window.lastWeatherData = data;
+        lastWeatherData = data;
 
         const hours = data.next12Hours || [];
         if (hours.length < 3) return;
@@ -165,12 +159,10 @@ async function fetchAndRender(url) {
     }
 }
 
-// =========================
-//  RENDER WEATHER
-// =========================
-
 function renderWeather(data) {
-    const hours = data.next12Hours;
+    const hours = data.next12Hours || [];
+    if (hours.length < 3) return;
+
     const current = hours[0];
     const next2 = hours.slice(1, 3);
     const next10 = hours.slice(2, 12);
@@ -184,7 +176,7 @@ function renderWeather(data) {
     updateTempChart(hours);
     updateRainChart(hours);
     updateNext10Cards(next10);
-    updateWeekly(data.next7Days);
+    updateWeekly(data.next7Days || []);
 }
 
 //
@@ -207,10 +199,11 @@ function updateHero(data, current) {
 }
 
 //
-// NEXT 2 HOURS
+// NEXT 2 HOURS BELOW HERO
 //
 function updateNext2(next2) {
     const t = LANG[currentLang];
+    const [h1, h2] = next2;
 
     const makeCard = (h) => `
         <div style="font-size:14px;opacity:0.8">${formatHour(h.time)}</div>
@@ -222,8 +215,8 @@ function updateNext2(next2) {
         </div>
     `;
 
-    document.getElementById("nextHour1").innerHTML = makeCard(next2[0]);
-    document.getElementById("nextHour2").innerHTML = makeCard(next2[1]);
+    document.getElementById("nextHour1").innerHTML = makeCard(h1);
+    document.getElementById("nextHour2").innerHTML = makeCard(h2);
 }
 
 //
@@ -287,7 +280,7 @@ function estimateUV(localtime, rainChance, condition) {
 }
 
 //
-// HIGH-RES CANVAS FIX
+// HIGH-RES CANVAS FIX (Retina sharp)
 //
 function fixCanvasResolution(canvas) {
     const dpr = window.devicePixelRatio || 1;
@@ -303,7 +296,7 @@ function fixCanvasResolution(canvas) {
 }
 
 //
-// TEMPERATURE CHART
+// TEMPERATURE CHART (NEXT 12 HOURS)
 //
 function updateTempChart(hours) {
     const canvas = document.getElementById("tempChart");
@@ -316,7 +309,7 @@ function updateTempChart(hours) {
 }
 
 //
-// RAIN CHANCE CHART
+// RAIN CHANCE CHART (NEXT 12 HOURS)
 //
 function updateRainChart(hours) {
     const canvas = document.getElementById("rainChart");
@@ -329,7 +322,7 @@ function updateRainChart(hours) {
 }
 
 //
-// NEXT 10 HOURS CARDS
+// NEXT 10 HOURS CARDS (HORIZONTAL SCROLL)
 //
 function updateNext10Cards(hours) {
     const t = LANG[currentLang];
@@ -377,7 +370,7 @@ function updateWeekly(days) {
 }
 
 //
-// GENERIC LINE CHART
+// GENERIC LINE CHART (SHARP)
 //
 function drawLineChart(ctx, canvas, values, labels, color, yLabel) {
     if (!values.length) return;
@@ -394,12 +387,15 @@ function drawLineChart(ctx, canvas, values, labels, color, yLabel) {
 
     ctx.clearRect(0, 0, w, h);
 
+    // Y-axis label
     ctx.fillStyle = "white";
     ctx.font = "12px Arial";
     ctx.fillText(yLabel, 5, 15);
 
+    // X-axis label
     ctx.fillText("Time →", w - 70, h - 5);
 
+    // Axis line
     ctx.strokeStyle = "rgba(255,255,255,0.3)";
     ctx.lineWidth = 1;
     ctx.beginPath();
@@ -407,6 +403,7 @@ function drawLineChart(ctx, canvas, values, labels, color, yLabel) {
     ctx.lineTo(w - pad, h - pad);
     ctx.stroke();
 
+    // Y-axis ticks
     ctx.fillStyle = "rgba(255,255,255,0.8)";
     ctx.font = "11px Arial";
 
@@ -425,6 +422,7 @@ function drawLineChart(ctx, canvas, values, labels, color, yLabel) {
         ctx.stroke();
     }
 
+    // Line
     ctx.strokeStyle = color;
     ctx.lineWidth = 2;
     ctx.beginPath();
@@ -439,6 +437,7 @@ function drawLineChart(ctx, canvas, values, labels, color, yLabel) {
 
     ctx.stroke();
 
+    // X-axis time labels
     ctx.fillStyle = "rgba(255,255,255,0.8)";
     ctx.font = "11px Arial";
 
