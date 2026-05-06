@@ -20,7 +20,10 @@ const LANG = {
         next10Hours: "Next 10 Hours",
         next7Days: "Next 7 Days",
         searchPlaceholder: "Enter city name...",
-        searchButton: "Search"
+        searchButton: "Search",
+        feelsLikeShort: "Feels like",
+        humidityShort: "Humidity",
+        humidityLower: "humidity"
     },
 
     fi: {
@@ -38,9 +41,43 @@ const LANG = {
         next10Hours: "Seuraavat 10 tuntia",
         next7Days: "Seuraavat 7 päivää",
         searchPlaceholder: "Syötä kaupungin nimi...",
-        searchButton: "Hae"
+        searchButton: "Hae",
+        feelsLikeShort: "Tuntuu kuin",
+        humidityShort: "Kosteus",
+        humidityLower: "kosteus"
     }
 };
+
+function toggleLanguage() {
+    currentLang = currentLang === "en" ? "fi" : "en";
+    applyLanguage();
+    if (window.lastWeatherData) renderWeather(window.lastWeatherData);
+}
+
+function applyLanguage() {
+    const t = LANG[currentLang];
+
+    document.querySelector("h3").textContent = t.todaySummary;
+
+    document.getElementById("sumFeels").previousElementSibling.textContent = t.feelsLike + ":";
+    document.getElementById("sumHumidity").previousElementSibling.textContent = t.humidity + ":";
+    document.getElementById("sumWind").previousElementSibling.textContent = t.wind + ":";
+    document.getElementById("sumRain").previousElementSibling.textContent = t.rainChance + ":";
+    document.getElementById("sumSunrise").previousElementSibling.textContent = t.sunrise + ":";
+    document.getElementById("sumSunset").previousElementSibling.textContent = t.sunset + ":";
+
+    document.querySelector(".summary-card h3:nth-of-type(2)").textContent = t.windDirection;
+    document.querySelector(".summary-card h3:nth-of-type(3)").textContent = t.uvIndex;
+
+    document.querySelector('#cityInput').placeholder = t.searchPlaceholder;
+    document.querySelector('.search-container button').textContent = t.searchButton;
+
+    document.querySelectorAll(".chart-card h3")[0].textContent = t.tempTrend;
+    document.querySelectorAll(".chart-card h3")[1].textContent = t.rainTrend;
+
+    document.querySelectorAll(".section-title")[0].textContent = t.next10Hours;
+    document.querySelectorAll(".section-title")[1].textContent = t.next7Days;
+}
 
 // =========================
 //  CONDITION TRANSLATION
@@ -78,55 +115,54 @@ function translateCondition(text) {
 }
 
 // =========================
-//  APPLY LANGUAGE
-// =========================
-
-function applyLanguage() {
-    const t = LANG[currentLang];
-
-    document.querySelector("h3").textContent = t.todaySummary;
-
-    document.getElementById("sumFeels").previousElementSibling.textContent = t.feelsLike + ":";
-    document.getElementById("sumHumidity").previousElementSibling.textContent = t.humidity + ":";
-    document.getElementById("sumWind").previousElementSibling.textContent = t.wind + ":";
-    document.getElementById("sumRain").previousElementSibling.textContent = t.rainChance + ":";
-    document.getElementById("sumSunrise").previousElementSibling.textContent = t.sunrise + ":";
-    document.getElementById("sumSunset").previousElementSibling.textContent = t.sunset + ":";
-
-    document.querySelector(".summary-card h3:nth-of-type(2)").textContent = t.windDirection;
-    document.querySelector(".summary-card h3:nth-of-type(3)").textContent = t.uvIndex;
-
-    document.querySelector('#cityInput').placeholder = t.searchPlaceholder;
-    document.querySelector('.search-container button').textContent = t.searchButton;
-
-    document.querySelectorAll(".chart-card h3")[0].textContent = t.tempTrend;
-    document.querySelectorAll(".chart-card h3")[1].textContent = t.rainTrend;
-
-    document.querySelectorAll(".section-title")[0].textContent = t.next10Hours;
-    document.querySelectorAll(".section-title")[1].textContent = t.next7Days;
-}
-
-function toggleLanguage() {
-    currentLang = currentLang === "en" ? "fi" : "en";
-    applyLanguage();
-    if (window.lastWeatherData) renderWeather(window.lastWeatherData);
-}
-
-// =========================
-//  FETCH WEATHER
+//  API
 // =========================
 
 const API_URL = "https://weather-backend-production-0667.up.railway.app/api/weather?q=";
 
-async function fetchWeather() {
+// AUTO-DETECT LOCATION
+window.addEventListener("DOMContentLoaded", () => {
+    applyLanguage();
+
+    if ("geolocation" in navigator) {
+        navigator.geolocation.getCurrentPosition(
+            async (pos) => {
+                const { latitude, longitude } = pos.coords;
+                const query = `${latitude},${longitude}`;
+                await fetchAndRender(API_URL + encodeURIComponent(query));
+            },
+            () => console.warn("Geolocation denied")
+        );
+    }
+});
+
+// SEARCH
+async function getWeather() {
     const city = document.getElementById("cityInput").value.trim();
     if (!city) return;
+    await fetchAndRender(API_URL + encodeURIComponent(city));
+}
 
-    const res = await fetch(API_URL + city);
-    const data = await res.json();
+// FETCH + RENDER
+async function fetchAndRender(url) {
+    try {
+        const response = await fetch(url);
+        const data = await response.json();
 
-    window.lastWeatherData = data;
-    renderWeather(data);
+        window.lastWeatherData = data;
+
+        const hours = data.next12Hours || [];
+        if (hours.length < 3) return;
+
+        const current = hours[0];
+        const next2 = hours.slice(1, 3);
+        const next10 = hours.slice(2, 12);
+
+        renderWeather(data);
+
+    } catch (err) {
+        console.error("Weather fetch error:", err);
+    }
 }
 
 // =========================
@@ -134,61 +170,298 @@ async function fetchWeather() {
 // =========================
 
 function renderWeather(data) {
-    const current = data.current;
     const hours = data.next12Hours;
-    const days = data.next7Days;
+    const current = hours[0];
+    const next2 = hours.slice(1, 3);
+    const next10 = hours.slice(2, 12);
 
-    // HERO
-    document.getElementById("currentTemp").textContent = `${current.temp}°C`;
+    updateHero(data, current);
+    updateNext2(next2);
+    updateTodaySummary(current, data.astro);
+    updateWindCompass(current.wind_dir);
+    updateUV(data.location.localtime, current);
+
+    updateTempChart(hours);
+    updateRainChart(hours);
+    updateNext10Cards(next10);
+    updateWeekly(data.next7Days);
+}
+
+//
+// HERO
+//
+function updateHero(data, current) {
+    const t = LANG[currentLang];
+
+    document.getElementById("locationName").textContent =
+        `${data.location.name}, ${data.location.country}`;
+
+    document.getElementById("currentTemp").textContent =
+        `${current.temp}°C`;
+
     document.getElementById("currentCondition").innerHTML =
         `<img class="animated-icon" src="https:${current.icon}" alt="">${translateCondition(current.condition)}`;
-    document.getElementById("currentFeels").textContent = `${current.feels_like}°C`;
-    document.getElementById("currentHumidity").textContent = `${current.humidity}%`;
 
-    // NEXT 2 HOURS
-    const next2 = document.getElementById("next2Hours");
-    next2.innerHTML = "";
-    hours.slice(0, 2).forEach(h => {
-        next2.innerHTML += `
-            <div class="hour-card">
-                <div>${h.time}</div>
-                <div>${h.temp}°C</div>
-                <div>${translateCondition(h.condition)}</div>
-                <div>Feels like ${h.feels_like}°C · ${h.humidity}%</div>
-            </div>
-        `;
-    });
+    document.getElementById("heroExtra").textContent =
+        `${t.feelsLikeShort} ${current.feels_like}°C • ${t.humidityShort} ${current.humidity}%`;
+}
 
-    // NEXT 10 HOURS
-    const next10 = document.getElementById("next10Hours");
-    next10.innerHTML = "";
+//
+// NEXT 2 HOURS
+//
+function updateNext2(next2) {
+    const t = LANG[currentLang];
+
+    const makeCard = (h) => `
+        <div style="font-size:14px;opacity:0.8">${formatHour(h.time)}</div>
+        <div style="font-size:28px;font-weight:bold">${h.temp}°C</div>
+        <img src="https:${h.icon}" alt="">
+        <div style="font-size:14px">${translateCondition(h.condition)}</div>
+        <div style="font-size:12px;opacity:0.8">
+            ${t.feelsLikeShort} ${h.feels_like}°C • ${h.humidity}% ${t.humidityLower}
+        </div>
+    `;
+
+    document.getElementById("nextHour1").innerHTML = makeCard(next2[0]);
+    document.getElementById("nextHour2").innerHTML = makeCard(next2[1]);
+}
+
+//
+// SUMMARY
+//
+function updateTodaySummary(current, astro) {
+    document.getElementById("sumFeels").textContent = `${current.feels_like}°C`;
+    document.getElementById("sumHumidity").textContent = `${current.humidity}%`;
+    document.getElementById("sumWind").textContent = `${current.wind_kph} kph`;
+    document.getElementById("sumRain").textContent = `${current.rain_chance}%`;
+    document.getElementById("sumSunrise").textContent = astro.sunrise;
+    document.getElementById("sumSunset").textContent = astro.sunset;
+}
+
+//
+// WIND COMPASS
+//
+function updateWindCompass(dir) {
+    const needle = document.getElementById("windNeedle");
+
+    const map = {
+        N: 0, NNE: 22.5, NE: 45, ENE: 67.5,
+        E: 90, ESE: 112.5, SE: 135, SSE: 157.5,
+        S: 180, SSW: 202.5, SW: 225, WSW: 247.5,
+        W: 270, WNW: 292.5, NW: 315, NNW: 337.5
+    };
+
+    const angle = map[dir] ?? 0;
+    needle.style.transform = `translateX(-50%) rotate(${angle}deg)`;
+}
+
+//
+// UV INDEX
+//
+function updateUV(localtime, current) {
+    const uv = estimateUV(localtime, current.rain_chance, current.condition);
+    const pointer = document.getElementById("uvPointer");
+    const uvText = document.getElementById("uvText");
+
+    const maxUV = 11;
+    const percent = Math.min(uv / maxUV, 1);
+    pointer.style.left = `${percent * 100}%`;
+    uvText.textContent = `UV: ${uv}`;
+}
+
+function estimateUV(localtime, rainChance, condition) {
+    const timePart = localtime.split(" ")[1];
+    const [hourStr, minuteStr] = timePart.split(":");
+    const hour = parseInt(hourStr, 10) + parseInt(minuteStr, 10) / 60;
+
+    let t = 1 - Math.abs(hour - 13) / 6;
+    t = Math.max(0, Math.min(1, t));
+
+    let cloudFactor = 1 - (rainChance / 100) * 0.6;
+    const condLower = condition.toLowerCase();
+    if (condLower.includes("cloud")) cloudFactor *= 0.8;
+    if (condLower.includes("rain")) cloudFactor *= 0.6;
+
+    const uvRaw = 11 * t * cloudFactor;
+    return Math.round(Math.max(0, Math.min(11, uvRaw)));
+}
+
+//
+// HIGH-RES CANVAS FIX
+//
+function fixCanvasResolution(canvas) {
+    const dpr = window.devicePixelRatio || 1;
+    const rect = canvas.getBoundingClientRect();
+
+    canvas.width = rect.width * dpr;
+    canvas.height = rect.height * dpr;
+
+    const ctx = canvas.getContext("2d");
+    ctx.scale(dpr, dpr);
+
+    return ctx;
+}
+
+//
+// TEMPERATURE CHART
+//
+function updateTempChart(hours) {
+    const canvas = document.getElementById("tempChart");
+    const ctx = fixCanvasResolution(canvas);
+
+    const temps = hours.map(h => h.temp);
+    const labels = hours.map(h => h.time);
+
+    drawLineChart(ctx, canvas, temps, labels, "#FFEB3B", "°C");
+}
+
+//
+// RAIN CHANCE CHART
+//
+function updateRainChart(hours) {
+    const canvas = document.getElementById("rainChart");
+    const ctx = fixCanvasResolution(canvas);
+
+    const rain = hours.map(h => h.rain_chance);
+    const labels = hours.map(h => h.time);
+
+    drawLineChart(ctx, canvas, rain, labels, "#80DEEA", "%");
+}
+
+//
+// NEXT 10 HOURS CARDS
+//
+function updateNext10Cards(hours) {
+    const t = LANG[currentLang];
+    const container = document.getElementById("next10Scroll");
+    container.innerHTML = "";
+
     hours.forEach(h => {
-        next10.innerHTML += `
-            <div class="hour-scroll-card">
-                <div>${h.time}</div>
-                <div>${h.temp}°C</div>
-                <div style="font-size:13px">${translateCondition(h.condition)}</div>
-                <div style="font-size:12px">Feels like ${h.feels_like}°C</div>
-            </div>
-        `;
-    });
+        const card = document.createElement("div");
+        card.className = "next10-card";
 
-    // WEEKLY FORECAST
-    const week = document.getElementById("weeklyForecast");
-    week.innerHTML = "";
-    days.forEach(d => {
-        week.innerHTML += `
-            <div class="day-card">
-                <div>${d.date}</div>
-                <div>${translateCondition(d.condition)}</div>
-                <div>${d.max}°C / ${d.min}°C</div>
+        card.innerHTML = `
+            <div style="font-size:14px;opacity:0.8">${formatHour(h.time)}</div>
+            <div style="font-size:22px;font-weight:bold">${h.temp}°C</div>
+            <img src="https:${h.icon}" alt="">
+            <div style="font-size:13px">${translateCondition(h.condition)}</div>
+            <div style="font-size:11px;opacity:0.8">
+                ${t.feelsLikeShort} ${h.feels_like}°C • ${h.humidity}% ${t.humidityLower}
             </div>
         `;
+
+        container.appendChild(card);
     });
 }
 
-// =========================
-//  INIT
-// =========================
+//
+// WEEKLY FORECAST
+//
+function updateWeekly(days) {
+    const grid = document.getElementById("weeklyForecast");
+    grid.innerHTML = "";
 
-window.addEventListener("DOMContentLoaded", applyLanguage);
+    days.forEach(d => {
+        const card = document.createElement("div");
+        card.className = "day-card";
+
+        card.innerHTML = `
+            <div>${d.date}</div>
+            <img src="https:${d.icon}" alt="">
+            <div>${translateCondition(d.condition)}</div>
+            <div><strong>${d.max}°C</strong> / ${d.min}°C</div>
+        `;
+
+        grid.appendChild(card);
+    });
+}
+
+//
+// GENERIC LINE CHART
+//
+function drawLineChart(ctx, canvas, values, labels, color, yLabel) {
+    if (!values.length) return;
+
+    const w = canvas.getBoundingClientRect().width;
+    const h = canvas.getBoundingClientRect().height;
+    const pad = 35;
+
+    const min = Math.min(...values);
+    const max = Math.max(...values);
+    const range = max - min || 1;
+
+    const step = (w - pad * 2) / (values.length - 1);
+
+    ctx.clearRect(0, 0, w, h);
+
+    ctx.fillStyle = "white";
+    ctx.font = "12px Arial";
+    ctx.fillText(yLabel, 5, 15);
+
+    ctx.fillText("Time →", w - 70, h - 5);
+
+    ctx.strokeStyle = "rgba(255,255,255,0.3)";
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.moveTo(pad, h - pad);
+    ctx.lineTo(w - pad, h - pad);
+    ctx.stroke();
+
+    ctx.fillStyle = "rgba(255,255,255,0.8)";
+    ctx.font = "11px Arial";
+
+    const ticks = 4;
+    for (let i = 0; i <= ticks; i++) {
+        const t = i / ticks;
+        const value = min + t * range;
+        const y = h - pad - t * (h - pad * 2);
+
+        ctx.fillText(value.toFixed(1), 5, y + 3);
+
+        ctx.strokeStyle = "rgba(255,255,255,0.15)";
+        ctx.beginPath();
+        ctx.moveTo(pad, y);
+        ctx.lineTo(w - pad, y);
+        ctx.stroke();
+    }
+
+    ctx.strokeStyle = color;
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+
+    values.forEach((v, i) => {
+        const x = pad + i * step;
+        const y = h - pad - ((v - min) / range) * (h - pad * 2);
+
+        if (i === 0) ctx.moveTo(x, y);
+        else ctx.lineTo(x, y);
+    });
+
+    ctx.stroke();
+
+    ctx.fillStyle = "rgba(255,255,255,0.8)";
+    ctx.font = "11px Arial";
+
+    labels.forEach((t, i) => {
+        if (i % 2 === 0 || i === labels.length - 1) {
+            const x = pad + i * step;
+            ctx.fillText(formatHourShort(t), x - 14, h - pad + 15);
+        }
+    });
+}
+
+//
+// HELPERS
+//
+function formatHour(t) {
+    return new Date(t.replace(" ", "T")).toLocaleTimeString([], {
+        hour: "2-digit",
+        minute: "2-digit"
+    });
+}
+
+function formatHourShort(t) {
+    return new Date(t.replace(" ", "T")).toLocaleTimeString([], {
+        hour: "2-digit"
+    });
+}
