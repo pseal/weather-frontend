@@ -1,3 +1,73 @@
+let currentLang = "en";
+
+const LANG = {
+    en: {
+        todaySummary: "Today Summary",
+        feelsLike: "Feels Like",
+        humidity: "Humidity",
+        wind: "Wind",
+        rainChance: "Rain Chance",
+        sunrise: "Sunrise",
+        sunset: "Sunset",
+        windDirection: "Wind Direction",
+        uvIndex: "UV Index",
+        tempTrend: "Temperature Trend (Next 12h)",
+        rainTrend: "Rain Chance Trend (Next 12h)",
+        next10Hours: "Next 10 Hours",
+        next7Days: "Next 7 Days",
+        searchPlaceholder: "Enter city name...",
+        searchButton: "Search"
+    },
+
+    fi: {
+        todaySummary: "Päivän yhteenveto",
+        feelsLike: "Tuntuu kuin",
+        humidity: "Kosteus",
+        wind: "Tuuli",
+        rainChance: "Sateen todennäköisyys",
+        sunrise: "Auringonnousu",
+        sunset: "Auringonlasku",
+        windDirection: "Tuulen suunta",
+        uvIndex: "UV-indeksi",
+        tempTrend: "Lämpötilatrendi (12h)",
+        rainTrend: "Sateen todennäköisyys (12h)",
+        next10Hours: "Seuraavat 10 tuntia",
+        next7Days: "Seuraavat 7 päivää",
+        searchPlaceholder: "Syötä kaupungin nimi...",
+        searchButton: "Hae"
+    }
+};
+
+function toggleLanguage() {
+    currentLang = currentLang === "en" ? "fi" : "en";
+    applyLanguage();
+}
+
+function applyLanguage() {
+    const t = LANG[currentLang];
+
+    document.querySelector("h3").textContent = t.todaySummary;
+
+    document.getElementById("sumFeels").previousElementSibling.textContent = t.feelsLike + ":";
+    document.getElementById("sumHumidity").previousElementSibling.textContent = t.humidity + ":";
+    document.getElementById("sumWind").previousElementSibling.textContent = t.wind + ":";
+    document.getElementById("sumRain").previousElementSibling.textContent = t.rainChance + ":";
+    document.getElementById("sumSunrise").previousElementSibling.textContent = t.sunrise + ":";
+    document.getElementById("sumSunset").previousElementSibling.textContent = t.sunset + ":";
+
+    document.querySelector(".summary-card h3:nth-of-type(2)").textContent = t.windDirection;
+    document.querySelector(".summary-card h3:nth-of-type(3)").textContent = t.uvIndex;
+
+    document.querySelector('input#cityInput').placeholder = t.searchPlaceholder;
+    document.querySelector('.search-container button').textContent = t.searchButton;
+
+    document.querySelectorAll(".chart-card h3")[0].textContent = t.tempTrend;
+    document.querySelectorAll(".chart-card h3")[1].textContent = t.rainTrend;
+
+    document.querySelectorAll(".section-title")[0].textContent = t.next10Hours;
+    document.querySelectorAll(".section-title")[1].textContent = t.next7Days;
+}
+
 const API_URL = "https://weather-backend-production-0667.up.railway.app/api/weather?q=";
 
 // AUTO-DETECT LOCATION
@@ -335,3 +405,5 @@ function formatHourShort(t) {
         hour: "2-digit"
     });
 }
+
+window.addEventListener("DOMContentLoaded", applyLanguage);
