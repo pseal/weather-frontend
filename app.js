@@ -68,6 +68,37 @@ function applyLanguage() {
     document.querySelectorAll(".section-title")[1].textContent = t.next7Days;
 }
 
+const CONDITION_FI = {
+    "Sunny": "Aurinkoista",
+    "Clear": "Selkeää",
+    "Partly cloudy": "Puolipilvistä",
+    "Cloudy": "Pilvistä",
+    "Overcast": "Ylipilvistä",
+    "Mist": "Utuista",
+    "Fog": "Sumuista",
+    "Patchy rain possible": "Mahdollisesti sadetta",
+    "Light rain": "Kevyttä sadetta",
+    "Moderate rain": "Kohtalaista sadetta",
+    "Heavy rain": "Voimakasta sadetta",
+    "Light snow": "Kevyttä lunta",
+    "Moderate snow": "Kohtalaista lunta",
+    "Heavy snow": "Voimakasta lunta",
+    "Patchy snow possible": "Mahdollisesti lunta",
+    "Thundery outbreaks possible": "Mahdollisia ukkoskuuroja",
+    "Blizzard": "Lumimyrsky",
+    "Freezing fog": "Jäätävää sumua",
+    "Ice pellets": "Jäätihkua",
+    "Light sleet": "Kevyttä räntää",
+    "Moderate or heavy sleet": "Voimakasta räntää"
+};
+
+function translateCondition(text) {
+    if (currentLang === "fi") {
+        return CONDITION_FI[text] || text;
+    }
+    return text;
+}
+
 const API_URL = "https://weather-backend-production-0667.up.railway.app/api/weather?q=";
 
 // AUTO-DETECT LOCATION
@@ -133,7 +164,7 @@ function updateHero(data, current) {
         `${current.temp}°C`;
 
     document.getElementById("currentCondition").innerHTML =
-        `<img class="animated-icon" src="https:${current.icon}" alt="">${current.condition}`;
+    `<img class="animated-icon" src="https:${current.icon}" alt="">${translateCondition(current.condition)}`;
 
     document.getElementById("heroExtra").textContent =
         `Feels like ${current.feels_like}°C • Humidity ${current.humidity}%`;
@@ -151,7 +182,7 @@ function updateNext2(next2) {
         <div style="font-size:14px;opacity:0.8">${formatHour(h.time)}</div>
         <div style="font-size:28px;font-weight:bold">${h.temp}°C</div>
         <img src="https:${h.icon}" alt="">
-        <div style="font-size:14px">${h.condition}</div>
+        <div style="font-size:14px">${translateCondition(h.condition)}</div>
         <div style="font-size:12px;opacity:0.8">
             Feels like ${h.feels_like}°C • ${h.humidity}% humidity
         </div>
@@ -278,7 +309,7 @@ function updateNext10Cards(hours) {
             <div style="font-size:14px;opacity:0.8">${formatHour(h.time)}</div>
             <div style="font-size:22px;font-weight:bold">${h.temp}°C</div>
             <img src="https:${h.icon}" alt="">
-            <div style="font-size:13px">${h.condition}</div>
+            <div style="font-size:13px">${translateCondition(h.condition)}</div>
             <div style="font-size:11px;opacity:0.8">
                 Feels like ${h.feels_like}°C • ${h.humidity}% humidity
             </div>
@@ -302,7 +333,7 @@ function updateWeekly(days) {
         card.innerHTML = `
             <div>${d.date}</div>
             <img src="https:${d.icon}" alt="">
-            <div>${d.condition}</div>
+            <div>${translateCondition(d.condition)}</div>
             <div><strong>${d.max}°C</strong> / ${d.min}°C</div>
         `;
 
