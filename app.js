@@ -16,10 +16,7 @@ const LANG = {
         next10Hours: "Next 10 Hours",
         next7Days: "Next 7 Days",
         searchPlaceholder: "Enter city name...",
-        searchButton: "Search",
-        feelsLikeShort: "Feels like",
-        humidityShort: "Humidity",
-        humidityLower: "humidity"
+        searchButton: "Search"
     },
 
     fi: {
@@ -37,23 +34,13 @@ const LANG = {
         next10Hours: "Seuraavat 10 tuntia",
         next7Days: "Seuraavat 7 päivää",
         searchPlaceholder: "Syötä kaupungin nimi...",
-        searchButton: "Hae",
-        feelsLikeShort: "Tuntuu kuin",
-        humidityShort: "Kosteus",
-        humidityLower: "kosteus"
+        searchButton: "Hae"
     }
 };
-
-let lastWeatherData = null;
 
 function toggleLanguage() {
     currentLang = currentLang === "en" ? "fi" : "en";
     applyLanguage();
-
-    // Re-render existing data in new language if we have it
-    if (lastWeatherData) {
-        renderWeather(lastWeatherData);
-    }
 }
 
 function applyLanguage() {
@@ -116,8 +103,6 @@ const API_URL = "https://weather-backend-production-0667.up.railway.app/api/weat
 
 // AUTO-DETECT LOCATION
 window.addEventListener("DOMContentLoaded", () => {
-    applyLanguage();
-
     if ("geolocation" in navigator) {
         navigator.geolocation.getCurrentPosition(
             async (pos) => {
@@ -143,8 +128,6 @@ async function fetchAndRender(url) {
         const response = await fetch(url);
         const data = await response.json();
 
-        lastWeatherData = data;
-
         const hours = data.next12Hours || [];
         if (hours.length < 3) return;
 
@@ -152,38 +135,27 @@ async function fetchAndRender(url) {
         const next2 = hours.slice(1, 3);
         const next10 = hours.slice(2, 12);
 
-        renderWeather(data);
+        updateHero(data, current);
+        updateNext2(next2);
+        updateTodaySummary(current, data.astro);
+        updateWindCompass(current.wind_dir);
+        updateUV(data.location.localtime, current);
+
+        updateTempChart(hours);
+        updateRainChart(hours);
+        updateNext10Cards(next10);
+        updateWeekly(data.next7Days || []);
 
     } catch (err) {
         console.error("Weather fetch error:", err);
     }
 }
 
-function renderWeather(data) {
-    const hours = data.next12Hours || [];
-    if (hours.length < 3) return;
-
-    const current = hours[0];
-    const next2 = hours.slice(1, 3);
-    const next10 = hours.slice(2, 12);
-
-    updateHero(data, current);
-    updateNext2(next2);
-    updateTodaySummary(current, data.astro);
-    updateWindCompass(current.wind_dir);
-    updateUV(data.location.localtime, current);
-
-    updateTempChart(hours);
-    updateRainChart(hours);
-    updateNext10Cards(next10);
-    updateWeekly(data.next7Days || []);
-}
-
 //
 // HERO
 //
 function updateHero(data, current) {
-    const t = LANG[currentLang];
+    const hero = document.getElementById("heroSection");
 
     document.getElementById("locationName").textContent =
         `${data.location.name}, ${data.location.country}`;
@@ -192,17 +164,18 @@ function updateHero(data, current) {
         `${current.temp}°C`;
 
     document.getElementById("currentCondition").innerHTML =
-        `<img class="animated-icon" src="https:${current.icon}" alt="">${translateCondition(current.condition)}`;
+    `<img class="animated-icon" src="https:${current.icon}" alt="">${translateCondition(current.condition)}`;
 
     document.getElementById("heroExtra").textContent =
-        `${t.feelsLikeShort} ${current.feels_like}°C • ${t.humidityShort} ${current.humidity}%`;
+        `Feels like ${current.feels_like}°C • Humidity ${current.humidity}%`;
+
+    hero.classList.add("visible");
 }
 
 //
 // NEXT 2 HOURS BELOW HERO
 //
 function updateNext2(next2) {
-    const t = LANG[currentLang];
     const [h1, h2] = next2;
 
     const makeCard = (h) => `
@@ -211,7 +184,7 @@ function updateNext2(next2) {
         <img src="https:${h.icon}" alt="">
         <div style="font-size:14px">${translateCondition(h.condition)}</div>
         <div style="font-size:12px;opacity:0.8">
-            ${t.feelsLikeShort} ${h.feels_like}°C • ${h.humidity}% ${t.humidityLower}
+            Feels like ${h.feels_like}°C • ${h.humidity}% humidity
         </div>
     `;
 
@@ -325,7 +298,6 @@ function updateRainChart(hours) {
 // NEXT 10 HOURS CARDS (HORIZONTAL SCROLL)
 //
 function updateNext10Cards(hours) {
-    const t = LANG[currentLang];
     const container = document.getElementById("next10Scroll");
     container.innerHTML = "";
 
@@ -339,7 +311,7 @@ function updateNext10Cards(hours) {
             <img src="https:${h.icon}" alt="">
             <div style="font-size:13px">${translateCondition(h.condition)}</div>
             <div style="font-size:11px;opacity:0.8">
-                ${t.feelsLikeShort} ${h.feels_like}°C • ${h.humidity}% ${t.humidityLower}
+                Feels like ${h.feels_like}°C • ${h.humidity}% humidity
             </div>
         `;
 
@@ -464,3 +436,5 @@ function formatHourShort(t) {
         hour: "2-digit"
     });
 }
+
+window.addEventListener("DOMContentLoaded", applyLanguage);
