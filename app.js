@@ -42,6 +42,24 @@ const LANG = {
 function toggleLanguage() {
     currentLang = currentLang === "en" ? "fi" : "en";
     applyLanguage();
+
+    if (lastWeatherData) {
+        // Re-render everything in the new language
+        const hours = lastWeatherData.next12Hours;
+        const current = hours[0];
+        const next2 = hours.slice(1, 3);
+        const next10 = hours.slice(2, 12);
+
+        updateHero(lastWeatherData, current);
+        updateNext2(next2);
+        updateTodaySummary(current, lastWeatherData.astro);
+        updateWindCompass(current.wind_dir);
+        updateUV(lastWeatherData.location.localtime, current);
+        updateTempChart(hours);
+        updateRainChart(hours);
+        updateNext10Cards(next10);
+        updateWeekly(lastWeatherData.next7Days);
+    }
 }
 
 function applyLanguage() {
@@ -128,6 +146,8 @@ async function fetchAndRender(url) {
     try {
         const response = await fetch(url);
         const data = await response.json();
+        
+        lastWeatherData = data;
 
         const hours = data.next12Hours || [];
         if (hours.length < 3) return;
