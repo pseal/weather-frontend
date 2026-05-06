@@ -1,4 +1,5 @@
 let currentLang = "en";
+let lastWeatherData = null;
 
 const LANG = {
     en: {
